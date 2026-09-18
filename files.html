@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#05030d">
+<title>Files — Brain Side</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+<link rel="stylesheet" href="glass.css">
+<script src="theme.js"></script>
+<style>
+html{height:100%}
+body{min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden;position:relative;z-index:1}
+
+.profile-topbar{position:fixed;top:0;left:0;right:0;z-index:999;height:52px;margin:10px 14px 0;padding:0 6px;display:flex;align-items:center;justify-content:space-between;gap:10px;border-radius:16px;background:linear-gradient(135deg,rgba(255,255,255,.16) 0%,rgba(255,255,255,.06) 100%);backdrop-filter:blur(28px) saturate(200%) brightness(1.08);-webkit-backdrop-filter:blur(28px) saturate(200%) brightness(1.08);border:1px solid rgba(255,255,255,.24);box-shadow:inset 0 1px 1px rgba(255,255,255,.4),inset 0 -1px 1px rgba(255,255,255,.06),0 8px 28px rgba(0,0,0,.35)}
+:root[data-theme="light"] .profile-topbar{background:linear-gradient(135deg,rgba(255,255,255,.75) 0%,rgba(255,255,255,.55) 100%);border-color:rgba(255,255,255,.9);box-shadow:inset 0 1px 1px rgba(255,255,255,1),inset 0 -1px 1px rgba(255,255,255,.5),0 8px 28px rgba(30,45,80,.12)}
+.profile-topbar-title{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:14px;font-weight:800;letter-spacing:-.01em;color:var(--text-primary);pointer-events:none;white-space:nowrap}
+.back-btn,.header-spacer{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--text-primary);background:transparent;border:none;cursor:pointer;transition:transform .3s cubic-bezier(.34,1.4,.5,1),color .2s;flex-shrink:0;padding:0;text-decoration:none;-webkit-tap-highlight-color:transparent}
+.back-btn:hover{transform:scale(1.12);color:var(--accent)}
+.back-btn:active{transform:scale(.92)}
+.back-btn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+.page-main{flex:1;max-width:1100px;width:100%;margin:0 auto;padding:86px 16px 40px}
+.page-hero{display:flex;flex-direction:column;align-items:center;margin-bottom:22px;gap:8px}
+.page-icon{width:54px;height:54px;border-radius:16px;display:grid;place-items:center;background:linear-gradient(135deg,rgba(10,132,255,.22),rgba(0,102,214,.10));border:1px solid rgba(255,255,255,.22);color:var(--accent);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 8px 22px var(--accent-glow)}
+.page-icon svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.page-title{font-size:22px;font-weight:800;color:var(--text-primary);letter-spacing:-.02em}
+.page-sub{font-size:13px;color:var(--text-secondary);text-align:center;max-width:400px;line-height:1.5}
+
+/* ⭐ 2 KOLOM */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+@media (max-width:640px){.two-col{gap:10px}}
+.col{display:flex;flex-direction:column;gap:10px;min-width:0}
+.col-header{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:14px;background:linear-gradient(135deg,rgba(255,255,255,.10) 0%,rgba(255,255,255,.04) 100%);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);font-size:11.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text-secondary);position:sticky;top:74px;z-index:5}
+.col-header .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.col-header.ai .dot{background:#0a84ff;box-shadow:0 0 8px rgba(10,132,255,.8)}
+.col-header.user .dot{background:#34c759;box-shadow:0 0 8px rgba(52,199,89,.8)}
+.col-header .count{margin-left:auto;font-size:10.5px;color:var(--text-tertiary);font-weight:700;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.08)}
+
+.file-list{display:flex;flex-direction:column;gap:10px}
+.file-card{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:linear-gradient(135deg,rgba(255,255,255,.12) 0%,rgba(255,255,255,.04) 100%);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);border:1px solid rgba(255,255,255,.18);box-shadow:inset 0 1px 1px rgba(255,255,255,.24),inset 0 -1px 1px rgba(255,255,255,.04),0 4px 16px rgba(0,0,0,.3);transition:transform .25s cubic-bezier(.34,1.4,.5,1);cursor:pointer;min-width:0}
+.file-card:hover{transform:translateY(-2px)}
+.file-icon{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:rgba(0,122,255,.14);border:1px solid rgba(0,122,255,.28);color:var(--accent);flex-shrink:0}
+.file-icon svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.file-body{flex:1;min-width:0}
+.file-name{font-size:13.5px;font-weight:700;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.file-meta{font-size:11.5px;color:var(--text-tertiary);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.file-size{font-size:10.5px;color:var(--text-dim);font-weight:600;padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);flex-shrink:0}
+
+.empty-state{text-align:center;padding:40px 16px;color:var(--text-tertiary)}
+.empty-icon{width:52px;height:52px;border-radius:16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);display:grid;place-items:center;margin:0 auto 12px;color:var(--text-tertiary)}
+.empty-icon svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.empty-title{font-size:13px;font-weight:700;color:var(--text-secondary);margin-bottom:4px}
+.empty-sub{font-size:11.5px;line-height:1.5}
+
+.skeleton{background:linear-gradient(90deg,#202020 25%,#303030 50%,#202020 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:8px}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.skeleton-card{display:flex;align-items:center;gap:10px;padding:12px;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);margin-bottom:8px}
+.skeleton-icon{width:36px;height:36px;border-radius:10px;flex-shrink:0}
+.skeleton-lines{flex:1;display:flex;flex-direction:column;gap:6px}
+.skeleton-line{height:10px}
+.skeleton-line.short{width:45%}
+.skeleton-line.medium{width:65%}
+</style>
+</head>
+<body>
+
+<div class="bg-aurora" aria-hidden="true">
+  <div class="blob blob-1"></div><div class="blob blob-2"></div><div class="blob blob-3"></div><div class="blob blob-4"></div>
+</div>
+
+<header class="profile-topbar">
+  <a class="back-btn" href="chat.html" aria-label="Kembali"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></a>
+  <div class="profile-topbar-title">Files</div>
+  <div class="header-spacer"></div>
+</header>
+
+<main class="page-main">
+  <div class="page-hero">
+    <div class="page-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+    <div class="page-title">Files</div>
+    <div class="page-sub">File yang dikirim AI di kiri, file yang kamu kirim di kanan.</div>
+  </div>
+
+  <div class="two-col">
+    <div class="col">
+      <div class="col-header ai"><span class="dot"></span>Dari AI<span class="count" id="countAI">0</span></div>
+      <div class="file-list" id="colAI"></div>
+    </div>
+    <div class="col">
+      <div class="col-header user"><span class="dot"></span>Dari Kamu<span class="count" id="countUser">0</span></div>
+      <div class="file-list" id="colUser"></div>
+    </div>
+  </div>
+</main>
+
+<script type="module">
+import { auth, db } from './firebase-config.js';
+import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { collection, getDocs, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const colAI = document.getElementById('colAI');
+const colUser = document.getElementById('colUser');
+const countAI = document.getElementById('countAI');
+const countUser = document.getElementById('countUser');
+
+function fmtSize(bytes) {
+  if (!bytes) return '';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / 1024 / 1024).toFixed(2) + ' MB';
+}
+
+function renderEmpty(el, title, sub) {
+  el.innerHTML = '<div class="empty-state"><div class="empty-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div class="empty-title">' + title + '</div><div class="empty-sub">' + sub + '</div></div>';
+}
+
+function renderSkeleton(el) {
+  el.innerHTML = '<div class="skeleton-card"><div class="skeleton skeleton-icon"></div><div class="skeleton-lines"><div class="skeleton skeleton-line medium"></div><div class="skeleton skeleton-line short"></div></div></div>' +
+                 '<div class="skeleton-card"><div class="skeleton skeleton-icon"></div><div class="skeleton-lines"><div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line short"></div></div></div>';
+}
+
+function renderColumn(el, countEl, files) {
+  countEl.textContent = files.length;
+  if (!files.length) { renderEmpty(el, 'Belum ada file', 'File yang dikirim di chat akan muncul di sini.'); return; }
+  el.innerHTML = '';
+  files.forEach(function(f) {
+    const card = document.createElement('div');
+    card.className = 'file-card';
+    const sizeTxt = fmtSize(f.size);
+    card.innerHTML =
+      '<div class="file-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>' +
+      '<div class="file-body"><div class="file-name">' + (f.name || 'file') + '</div><div class="file-meta">' + (f.chatTitle || 'Chat') + '</div></div>' +
+      (sizeTxt ? '<div class="file-size">' + sizeTxt + '</div>' : '');
+    el.appendChild(card);
+  });
+}
+
+renderSkeleton(colAI);
+renderSkeleton(colUser);
+
+onAuthStateChanged(auth, async function(user) {
+  if (!user) {
+    countAI.textContent = '0'; countUser.textContent = '0';
+    renderEmpty(colAI, 'Belum login', 'Login buat lihat file kamu.');
+    renderEmpty(colUser, 'Belum login', 'Login buat lihat file kamu.');
+    return;
+  }
+  try {
+    const chatsRef = collection(db, 'users', user.uid, 'chats');
+    const snap = await getDocs(query(chatsRef, orderBy('createdAt', 'desc')));
+    const aiFiles = [];
+    const userFiles = [];
+    for (const chatDoc of snap.docs) {
+      const chatTitle = (chatDoc.data() || {}).title || 'Chat';
+      const msgsRef = collection(db, 'users', user.uid, 'chats', chatDoc.id, 'messages');
+      const msgsSnap = await getDocs(msgsRef);
+      msgsSnap.forEach(function(m) {
+        const d = m.data() || {};
+        const role = d.role === 'ai' ? 'ai' : 'user';
+        const list = d.files || (d.file ? [d.file] : []);
+        list.forEach(function(f) {
+          const item = { name: f.name, type: f.type, size: f.size, chatTitle: chatTitle };
+          if (role === 'ai') aiFiles.push(item);
+          else userFiles.push(item);
+        });
+      });
+    }
+    renderColumn(colAI, countAI, aiFiles);
+    renderColumn(colUser, countUser, userFiles);
+  } catch (e) {
+    renderEmpty(colAI, 'Gagal memuat', 'Coba refresh halaman.');
+    renderEmpty(colUser, 'Gagal memuat', 'Coba refresh halaman.');
+  }
+});
+</script>
+
+</body>
+</html>
