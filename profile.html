@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en" data-auth="required">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#05030d">
+<title>Profile — Brain Side</title>
+<link rel="stylesheet" href="glass.css">
+<script src="theme.js"></script>
+<script>
+  (function(){
+    try {
+      var c = JSON.parse(sessionStorage.getItem('bs_user_cache') || 'null');
+      if (c) window.__bsCache = c;
+    } catch(_) {}
+  })();
+</script>
+<style>
+html{-webkit-text-size-adjust:100%;-moz-text-size-adjust:100%;text-size-adjust:100%;height:100%}
+body{min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden;overflow-y:auto;position:relative;z-index:1}
+@keyframes spin360{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.spin-once{animation:spin360 .5s cubic-bezier(.4,0,.2,1) both;transform-origin:center}
+.profile-topbar{position:sticky;top:0;z-index:50;height:52px;margin:10px 14px 0;padding:0 6px;display:flex;align-items:center;justify-content:space-between;gap:10px;border-radius:16px;background:linear-gradient(135deg,rgba(255,255,255,.16) 0%,rgba(255,255,255,.06) 100%);backdrop-filter:blur(28px) saturate(200%) brightness(1.08);-webkit-backdrop-filter:blur(28px) saturate(200%) brightness(1.08);border:1px solid rgba(255,255,255,.24);box-shadow:inset 0 1px 1px rgba(255,255,255,.4),inset 0 -1px 1px rgba(255,255,255,.06),0 8px 28px rgba(0,0,0,.35)}
+:root[data-theme="light"] .profile-topbar{background:linear-gradient(135deg,rgba(255,255,255,.75) 0%,rgba(255,255,255,.55) 100%);border-color:rgba(255,255,255,.9);box-shadow:inset 0 1px 1px rgba(255,255,255,1),inset 0 -1px 1px rgba(255,255,255,.5),0 8px 28px rgba(30,45,80,.12)}
+.profile-topbar-title{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:14px;font-weight:800;letter-spacing:-.01em;color:var(--text-primary);pointer-events:none;white-space:nowrap}
+.back-btn,.gear-btn{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--text-primary);background:transparent;border:none;cursor:pointer;transition:transform .3s cubic-bezier(.34,1.4,.5,1),color .2s;flex-shrink:0;padding:0;font-family:inherit;-webkit-tap-highlight-color:transparent}
+.back-btn:hover,.gear-btn:hover{transform:scale(1.12);color:var(--accent)}
+.back-btn:active,.gear-btn:active{transform:scale(.92)}
+.back-btn svg,.gear-btn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.gear-btn svg{color:var(--accent)}
+.profile-main{flex:1;max-width:560px;width:100%;margin:0 auto;padding:24px 20px 60px}
+.profile-hero{display:flex;flex-direction:column;align-items:center;text-align:center;margin-bottom:28px;animation:fadeIn .5s ease both}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.avatar-wrap{position:relative;width:128px;height:128px;margin-bottom:18px;border-radius:50%}
+.avatar{width:100%;height:100%;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-dark));display:grid;place-items:center;font-size:48px;font-weight:800;color:#fff;overflow:hidden;border:3px solid rgba(255,255,255,.55);box-shadow:inset 0 1px 2px rgba(255,255,255,.5),0 10px 36px rgba(0,122,255,.32),0 4px 12px rgba(0,0,0,.12);background-size:cover;background-position:center;background-repeat:no-repeat;position:relative}
+:root[data-theme="dark"] .avatar{border-color:rgba(255,255,255,.22);box-shadow:inset 0 1px 2px rgba(255,255,255,.2),0 10px 40px rgba(10,132,255,.42),0 4px 12px rgba(0,0,0,.5)}
+.avatar.has-photo{background-image:var(--avatar-url,none);background-color:transparent;font-size:0;border:none}
+.avatar-edit-badge{position:absolute;right:4px;bottom:4px;width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-dark));color:#fff;display:flex;align-items:center;justify-content:center;border:3px solid rgba(255,255,255,.9);box-shadow:0 4px 14px rgba(0,122,255,.45);transition:transform .3s cubic-bezier(.34,1.56,.5,1);cursor:pointer;padding:0;z-index:2;-webkit-tap-highlight-color:transparent}
+:root[data-theme="dark"] .avatar-edit-badge{border-color:rgba(20,24,34,.9)}
+.avatar-edit-badge:hover{transform:scale(1.14) rotate(-8deg)}
+.avatar-edit-badge svg{width:16px;height:16px;stroke-width:2.5}
+.avatar-wrap.flashing::after{content:"";position:absolute;inset:-8px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.95) 0%,rgba(255,255,255,.6) 40%,transparent 70%);pointer-events:none;animation:shutterFlash .55s cubic-bezier(.4,0,.2,1) forwards;z-index:3}
+@keyframes shutterFlash{0%{opacity:0;transform:scale(.7)}20%{opacity:1;transform:scale(1.05)}60%{opacity:.7;transform:scale(1.15)}100%{opacity:0;transform:scale(1.3)}}
+.username-display{display:inline-flex;align-items:center;padding:6px 14px;margin-bottom:6px;max-width:100%}
+.username-text{font-size:24px;font-weight:800;letter-spacing:-.02em;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px}
+.username-edit{display:none;width:100%;max-width:320px;gap:8px;align-items:center;margin-bottom:6px}
+.username-edit.active{display:flex}
+.username-edit input{flex:1;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,.2);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.42);color:var(--text-primary);font-size:16px;font-weight:700;outline:none;font-family:inherit}
+.username-edit input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,122,255,.18)}
+.username-edit button{padding:10px 16px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,.28);font-family:inherit}
+.username-edit .btn-save{background:linear-gradient(135deg,var(--accent),var(--accent-dark));color:#fff}
+.username-edit .btn-cancel{background:rgba(255,255,255,.14);color:var(--text-primary)}
+.useremail{font-size:13px;color:var(--text-secondary);font-weight:500;word-break:break-all;padding:0 20px}
+.section{margin-bottom:16px;border-radius:22px;padding:18px 20px;animation:fadeIn .5s ease both;background:linear-gradient(135deg,rgba(255,255,255,.22) 0%,rgba(255,255,255,.08) 100%);backdrop-filter:blur(28px) saturate(200%) brightness(1.08);-webkit-backdrop-filter:blur(28px) saturate(200%) brightness(1.08);border:1px solid rgba(255,255,255,.4);box-shadow:inset 0 1px 1px rgba(255,255,255,.65),inset 0 -1px 1px rgba(255,255,255,.1),0 6px 22px rgba(0,0,0,.08)}
+:root[data-theme="dark"] .section{background:linear-gradient(135deg,rgba(255,255,255,.1) 0%,rgba(255,255,255,.03) 100%);border-color:rgba(255,255,255,.16);box-shadow:inset 0 1px 1px rgba(255,255,255,.22),inset 0 -1px 1px rgba(255,255,255,.04),0 6px 24px rgba(0,0,0,.4)}
+.section-title{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);margin-bottom:14px}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat-box{padding:14px 8px;border-radius:14px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);text-align:center;cursor:pointer;transition:transform .25s cubic-bezier(.34,1.4,.5,1),box-shadow .25s ease;font-family:inherit;color:inherit;-webkit-tap-highlight-color:transparent}
+:root[data-theme="dark"] .stat-box{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12)}
+.stat-box:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,122,255,.18)}
+.stat-box:active{transform:translateY(0) scale(.97)}
+.stat-value{font-size:22px;font-weight:800;color:var(--accent);letter-spacing:-.02em}
+.stat-label{font-size:10.5px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin-top:2px}
+.row-item{display:flex;align-items:center;gap:14px;padding:12px 4px}
+.row-item+.row-item{border-top:1px solid rgba(255,255,255,.14)}
+:root[data-theme="dark"] .row-item+.row-item{border-top-color:rgba(255,255,255,.08)}
+.row-icon{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;color:var(--accent);flex-shrink:0}
+:root[data-theme="dark"] .row-icon{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.14)}
+.row-icon svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.row-body{flex:1;min-width:0}
+.row-label{font-size:13px;font-weight:700;color:var(--text-primary)}
+.row-sub{font-size:12px;color:var(--text-secondary);margin-top:2px;word-break:break-all}
+.row-value{font-size:12px;font-weight:700;color:var(--accent);padding:4px 10px;border-radius:999px;background:rgba(0,122,255,.14);border:1px solid rgba(0,122,255,.28)}
+.btn{width:100%;padding:13px 18px;border-radius:16px;font-size:13.5px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,.32);font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .3s cubic-bezier(.34,1.4,.5,1),filter .2s,background .2s}
+.btn svg{width:16px;height:16px;stroke-width:2.2;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}
+.btn-danger{background:linear-gradient(135deg,#ff3b30,#c41a10);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 6px 20px rgba(255,59,48,.35)}
+.btn-danger:hover{transform:translateY(-2px);filter:brightness(1.08)}
+.btn-support{background:linear-gradient(135deg,#ff9500,#ff6b00);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 6px 20px rgba(255,149,0,.4)}
+.btn-support:hover{transform:translateY(-2px);filter:brightness(1.08)}
+#photoInput{display:none}
+
+/* ⭐ API Key personalization */
+.api-key-card{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);transition:background .2s}
+:root[data-theme="dark"] .api-key-card{background:rgba(255,255,255,.04)}
+.api-key-icon{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:22px;line-height:1;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);flex-shrink:0;transition:background .3s,border-color .3s}
+.api-key-body{flex:1;min-width:0}
+.api-key-name{font-size:14px;font-weight:800;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.api-key-detail{font-size:11.5px;color:var(--text-tertiary);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:ui-monospace,Menlo,monospace}
+.api-key-gear{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:rgba(0,122,255,.14);border:1px solid rgba(0,122,255,.28);color:var(--accent);cursor:pointer;padding:0;transition:transform .25s cubic-bezier(.34,1.4,.5,1),background .2s;flex-shrink:0;font-family:inherit;-webkit-tap-highlight-color:transparent}
+.api-key-gear:hover{transform:scale(1.08);background:rgba(0,122,255,.22)}
+.api-key-gear:active{transform:scale(.94)}
+.api-key-gear svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.api-key-input-row{display:flex;gap:8px;margin-top:10px}
+.api-key-input-row input{flex:1;padding:11px 14px;border-radius:12px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.20);color:var(--text-primary);font-size:13px;font-family:ui-monospace,Menlo,monospace;outline:none;transition:border-color .2s}
+.api-key-input-row input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,122,255,.16)}
+.api-key-input-row button{padding:0 16px;border-radius:12px;font-size:12.5px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent-dark));color:#fff;border:1px solid rgba(255,255,255,.28);cursor:pointer;font-family:inherit;white-space:nowrap}
+
+/* ⭐ Stat overlay */
+.stat-overlay{position:fixed;inset:0;z-index:1500;display:none}
+.stat-overlay.show{display:block}
+.stat-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.5);-webkit-tap-highlight-color:transparent;opacity:0;transition:opacity .25s}
+.stat-overlay.show .stat-backdrop{opacity:1}
+.stat-sheet{position:absolute;left:50%;bottom:0;transform:translateX(-50%) translateY(100%);width:min(560px,100%);max-height:80vh;border-radius:24px 24px 0 0;background:linear-gradient(135deg,rgba(48,52,66,.98),rgba(38,42,55,.98));backdrop-filter:blur(40px) saturate(200%);-webkit-backdrop-filter:blur(40px) saturate(200%);border-top:1px solid rgba(255,255,255,.16);box-shadow:0 -20px 60px rgba(0,0,0,.6);transition:transform .32s cubic-bezier(.34,1.2,.5,1);display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0);overflow:hidden}
+:root[data-theme="light"] .stat-sheet{background:linear-gradient(135deg,rgba(255,255,255,.98),rgba(245,248,252,.98));border-top-color:rgba(0,0,0,.06)}
+.stat-overlay.show .stat-sheet{transform:translateX(-50%) translateY(0)}
+.stat-handle{width:40px;height:4px;border-radius:2px;background:rgba(255,255,255,.25);margin:10px auto 4px;flex-shrink:0}
+:root[data-theme="light"] .stat-handle{background:rgba(0,0,0,.18)}
+.stat-header{display:flex;align-items:center;justify-content:space-between;padding:8px 20px 12px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0}
+:root[data-theme="light"] .stat-header{border-bottom-color:rgba(0,0,0,.06)}
+.stat-title{font-size:15px;font-weight:800;color:var(--text-primary)}
+.stat-close{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:var(--text-secondary);cursor:pointer;padding:0}
+.stat-close svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.stat-body{flex:1;overflow-y:auto;padding:18px 20px 24px}
+.stat-summary{display:flex;gap:12px;margin-bottom:18px}
+.stat-summary-box{flex:1;padding:14px;border-radius:14px;background:rgba(0,122,255,.10);border:1px solid rgba(0,122,255,.24);text-align:center}
+.stat-summary-value{font-size:26px;font-weight:800;color:var(--accent);letter-spacing:-.02em}
+.stat-summary-label{font-size:10.5px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin-top:3px}
+.chart-wrap{padding:16px 8px 8px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.10);margin-bottom:14px}
+.chart-title{font-size:11.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text-tertiary);margin-bottom:12px;padding:0 6px}
+.chart-svg{width:100%;height:180px;display:block}
+.bar{fill:url(#barGrad);transition:opacity .2s}
+.bar-label{font-size:9.5px;fill:var(--text-tertiary);text-anchor:middle;font-weight:600}
+.bar-value{font-size:10px;fill:var(--text-secondary);text-anchor:middle;font-weight:800}
+.credit-list{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.credit-row{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10)}
+.credit-row-label{font-size:12.5px;font-weight:700;color:var(--text-primary)}
+.credit-row-sub{font-size:11px;color:var(--text-tertiary);margin-top:2px}
+.credit-row-value{font-size:13px;font-weight:800;color:var(--accent)}
+
+.settings-overlay{position:fixed;inset:0;z-index:1100}
+.settings-overlay[hidden]{display:none}
+.settings-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.3);opacity:0;transition:opacity .22s}
+.settings-overlay.show .settings-backdrop{opacity:1}
+.settings-sheet{position:absolute;top:68px;right:16px;width:218px;padding:6px;border-radius:20px;background:linear-gradient(135deg,rgba(255,255,255,.22),rgba(255,255,255,.1));backdrop-filter:blur(36px) saturate(200%);-webkit-backdrop-filter:blur(36px) saturate(200%);border:1px solid rgba(255,255,255,.35);box-shadow:0 16px 44px rgba(0,0,0,.35);transform-origin:top right;transform:scale(.85) translateY(-6px);opacity:0;transition:transform .28s cubic-bezier(.34,1.4,.5,1),opacity .2s ease}
+:root[data-theme="dark"] .settings-sheet{background:linear-gradient(135deg,rgba(255,255,255,.14),rgba(255,255,255,.06));border-color:rgba(255,255,255,.2)}
+.settings-overlay.show .settings-sheet{transform:scale(1) translateY(0);opacity:1}
+.settings-item{width:100%;display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:14px;color:var(--text-primary);font-size:13.5px;font-weight:600;font-family:inherit;cursor:pointer;background:transparent;border:none;text-align:left}
+.settings-item:hover{background:rgba(255,255,255,.14)}
+.settings-item svg{width:17px;height:17px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;color:var(--accent)}
+.settings-item.danger{color:#ff5f57}
+.settings-item.danger svg{color:#ff5f57}
+@media (max-width:640px){.profile-main{padding:20px 16px 60px}.avatar-wrap{width:112px;height:112px}.username-text{font-size:20px}.stat-value{font-size:19px}.settings-sheet{top:62px;right:12px;width:208px}}
+</style>
+</head>
+<body>
+
+<div class="bg-aurora" aria-hidden="true">
+  <div class="blob blob-1"></div><div class="blob blob-2"></div><div class="blob blob-3"></div><div class="blob blob-4"></div>
+</div>
+
+<header class="profile-topbar">
+  <button class="back-btn" id="backBtn" aria-label="Back"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+  <div class="profile-topbar-title">Profile</div>
+  <button class="gear-btn" id="gearBtn" aria-label="Pengaturan">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+  </button>
+</header>
+
+<main class="profile-main">
+  <div class="profile-hero">
+    <div class="avatar-wrap" id="avatarWrap">
+      <div class="avatar" id="avatarEl">?</div>
+      <button class="avatar-edit-badge" id="avatarEditBadge" type="button" aria-label="Ganti foto profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      </button>
+    </div>
+    <input type="file" id="photoInput" accept="image/*" />
+    <div class="username-display" id="usernameDisplay"><span class="username-text" id="usernameText">Loading...</span></div>
+    <div class="username-edit" id="usernameEdit">
+      <input type="text" id="usernameInput" placeholder="Nama kamu" maxlength="20" />
+      <button class="btn-save" id="usernameSave">Simpan</button>
+      <button class="btn-cancel" id="usernameCancel">Batal</button>
+    </div>
+    <div class="useremail" id="userEmail">Loading...</div>
+  </div>
+
+  <section class="section">
+    <div class="section-title">Statistik</div>
+    <div class="stat-grid">
+      <button class="stat-box" id="statChatsBox" type="button"><div class="stat-value" id="statChats">0</div><div class="stat-label">Chat</div></button>
+      <button class="stat-box" id="statMessagesBox" type="button"><div class="stat-value" id="statMessages">0</div><div class="stat-label">Pesan</div></button>
+      <button class="stat-box" id="statCreditsBox" type="button"><div class="stat-value" id="statCredits">10</div><div class="stat-label">Credits</div></button>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-title">Akun</div>
+    <div class="row-item">
+      <div class="row-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></div>
+      <div class="row-body"><div class="row-label">Email</div><div class="row-sub" id="rowEmail">Loading...</div></div>
+    </div>
+    <div class="row-item">
+      <div class="row-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+      <div class="row-body"><div class="row-label">User ID</div><div class="row-sub" id="rowUid">—</div></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-title">Personalisasi</div>
+    <div class="api-key-card" id="apiKeyCard">
+      <div class="api-key-icon" id="apiKeyIcon">🔑</div>
+      <div class="api-key-body">
+        <div class="api-key-name" id="apiKeyName">Belum ada API Key</div>
+        <div class="api-key-detail" id="apiKeyDetail">Masukkan API key untuk mengaktifkan model AI</div>
+      </div>
+      <button class="api-key-gear" id="apiKeyGear" aria-label="Kelola API Key">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
+    <div class="api-key-input-row" id="apiKeyInputRow" style="display:none">
+      <input type="text" id="apiKeyInput" placeholder="Paste API Key (sk-..., AIza..., gsk_...)" autocomplete="off" spellcheck="false" />
+      <button id="apiKeySave" type="button">Simpan</button>
+    </div>
+    <div id="ai-models" style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.14)">
+      <div class="row-label" style="font-weight:800;font-size:13px;margin-bottom:10px">Model AI</div>
+      <div id="aiModelsList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px"></div>
+      <div class="api-key-card" id="addModelToggle" style="cursor:pointer">
+        <div class="api-key-icon">➕</div>
+        <div class="api-key-body">
+          <div class="api-key-name">Tambah Model Baru</div>
+          <div class="api-key-detail">Custom endpoint + API key</div>
+        </div>
+      </div>
+      <div class="api-key-input-row" id="addModelFormRow" style="display:none;flex-direction:column;gap:8px">
+        <input type="text" id="newModelName" placeholder="Nama model (mis. GPT-4)" autocomplete="off" spellcheck="false" />
+        <input type="text" id="newModelApiKey" placeholder="API Key" autocomplete="off" spellcheck="false" />
+        <input type="text" id="newModelEndpoint" placeholder="Endpoint (https://...)" autocomplete="off" spellcheck="false" />
+        <button id="newModelSave" type="button" style="align-self:flex-end">Simpan Model</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <button class="btn btn-support" id="supportBtn">
+      <svg viewBox="0 0 24 24"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>
+      Support Me
+    </button>
+  </section>
+
+  <section class="section">
+    <div class="section-title">Zona Bahaya</div>
+    <button class="btn btn-danger" id="logoutBtn"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</button>
+  </section>
+</main>
+
+<div class="stat-overlay" id="statOverlay">
+  <div class="stat-backdrop" id="statBackdrop"></div>
+  <div class="stat-sheet" role="dialog" aria-modal="true">
+    <div class="stat-handle"></div>
+    <div class="stat-header">
+      <div class="stat-title" id="statTitle">Statistik</div>
+      <button class="stat-close" id="statClose" type="button" aria-label="Tutup"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="stat-body" id="statBody"></div>
+  </div>
+</div>
+
+<div class="settings-overlay" id="settingsOverlay" hidden>
+  <div class="settings-backdrop" id="settingsBackdrop"></div>
+  <div class="settings-sheet" role="dialog" aria-modal="true">
+    <button class="settings-item" id="setChangeName"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg><span>Ganti Nama</span></button>
+    <button class="settings-item" id="setLogout"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span>Log Out</span></button>
+  </div>
+</div>
+
+<script type="module">
+import { auth, db } from './firebase-config.js';
+import { onAuthStateChanged, signOut, updateProfile } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { doc, getDoc, setDoc, updateDoc, collection, getDocs, query } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { initModelPicker, getModels, getActiveModel, setActiveModel, saveModelsToStorage, refreshModels } from './ai-models.js';
+
+const $ = (id) => document.getElementById(id);
+const state = { user: null, username: null, photoBase64: null, credits: 10, chats: [] };
+const API_KEY_LS = 'bs_api_key_v1';
+
+let currentPhoto = '__NOT_SET__', currentName = '__NOT_SET__';
+
+function syncLastAccount(photo, name) {
+  try {
+    const raw = localStorage.getItem('bs_last_account_v2');
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (photo !== undefined) data.photoBase64 = photo;
+    if (name !== undefined) data.username = name;
+    localStorage.setItem('bs_last_account_v2', JSON.stringify(data));
+  } catch (_) {}
+}
+
+function setAvatar(photoBase64, initial) {
+  const av = $('avatarEl');
+  if (photoBase64) {
+    av.classList.add('has-photo');
+    av.style.setProperty('--avatar-url', `url("${photoBase64}")`);
+    av.textContent = '';
+  } else {
+    av.classList.remove('has-photo');
+    av.style.removeProperty('--avatar-url');
+    av.textContent = (initial || '?').toUpperCase();
+  }
+}
+function renderAvatarSafe(photo, initial) { if (photo === currentPhoto) return; currentPhoto = photo; setAvatar(photo, initial); }
+function renderNameSafe(name) { if (name === currentName) return; currentName = name; $('usernameText').textContent = name; }
+
+let indicatorTimer;
+function showIndicator(text, type) {
+  let el = document.getElementById('saveIndicator');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'saveIndicator';
+    el.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(20px);padding:10px 20px;border-radius:999px;font-size:12.5px;font-weight:700;color:#fff;z-index:1400;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;box-shadow:0 10px 30px rgba(0,0,0,.3)';
+    document.body.appendChild(el);
+  }
+  el.textContent = text;
+  el.style.background = (type === 'err' ? '#ff3b30' : (type === 'ok' ? '#34c759' : 'rgba(0,0,0,.85)'));
+  requestAnimationFrame(() => { el.style.opacity = '1'; el.style.transform = 'translateX(-50%) translateY(0)'; });
+  clearTimeout(indicatorTimer);
+  indicatorTimer = setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateX(-50%) translateY(20px)'; }, 1800);
+}
+
+function renderFromCache(){
+  const c = window.__bsCache;
+  if (!c) return;
+  const email = c.email || '';
+  const name = c.username || email.split('@')[0] || 'User';
+  const photo = c.photoBase64 || null;
+  if (email) { $('userEmail').textContent = email; $('rowEmail').textContent = email; }
+  renderNameSafe(name);
+  renderAvatarSafe(photo, name[0]);
+}
+
+/* ═══ API KEY PROVIDER DETECT ═══ */
+function detectProvider(key) {
+  if (!key) return null;
+  const k = key.trim();
+  if (k.startsWith('sk-ant-')) return { id:'anthropic', name:'Anthropic Claude', emoji:'🧠', color:'#d97706' };
+  if (k.startsWith('sk-proj-') || (k.startsWith('sk-') && k.length > 40)) return { id:'openai', name:'OpenAI', emoji:'🤖', color:'#10a37f' };
+  if (k.startsWith('AIza')) return { id:'google', name:'Google Gemini', emoji:'✨', color:'#4285f4' };
+  if (k.startsWith('gsk_')) return { id:'groq', name:'Groq', emoji:'⚡', color:'#f55036' };
+  if (k.startsWith('xai-')) return { id:'xai', name:'xAI Grok', emoji:'🚀', color:'#111' };
+  if (k.startsWith('r8_')) return { id:'replicate', name:'Replicate', emoji:'🔁', color:'#111' };
+  if (k.startsWith('hf_')) return { id:'huggingface', name:'Hugging Face', emoji:'🤗', color:'#ffcc4d' };
+  if (k.startsWith('pplx-')) return { id:'perplexity', name:'Perplexity', emoji:'🔍', color:'#20808d' };
+  if (k.startsWith('sk-or-')) return { id:'openrouter', name:'OpenRouter', emoji:'🔀', color:'#6467f2' };
+  if (k.startsWith('together_')) return { id:'together', name:'Together AI', emoji:'🤝', color:'#0f6fff' };
+  if (k.startsWith('mistral-')) return { id:'mistral', name:'Mistral AI', emoji:'🌪', color:'#ff7000' };
+  if (k.startsWith('cohere-')) return { id:'cohere', name:'Cohere', emoji:'🌊', color:'#39594d' };
+  return { id:'unknown', name:'API Key Custom', emoji:'🔑', color:'#6b7280' };
+}
+
+function getStoredApiKey() { try { return localStorage.getItem(API_KEY_LS) || ''; } catch (_) { return ''; } }
+function setStoredApiKey(v) { try { v ? localStorage.setItem(API_KEY_LS, v) : localStorage.removeItem(API_KEY_LS); } catch (_) {} }
+
+function renderApiKeyCard() {
+  const key = getStoredApiKey();
+  const p = detectProvider(key);
+  const iconEl = $('apiKeyIcon'), nameEl = $('apiKeyName'), detailEl = $('apiKeyDetail');
+  if (!key) {
+    iconEl.textContent = '🔑';
+    iconEl.style.background = 'rgba(255,255,255,.10)';
+    iconEl.style.borderColor = 'rgba(255,255,255,.18)';
+    nameEl.textContent = 'Belum ada API Key';
+    detailEl.textContent = 'Masukkan API key untuk mengaktifkan model AI';
+    return;
+  }
+  const masked = key.length > 16 ? key.slice(0, 8) + '…' + key.slice(-6) : key;
+  iconEl.textContent = p.emoji;
+  iconEl.style.background = 'linear-gradient(135deg, ' + p.color + '33, ' + p.color + '11)';
+  iconEl.style.borderColor = p.color + '55';
+  nameEl.textContent = p.name;
+  detailEl.textContent = masked;
+}
+
+renderFromCache();
+renderApiKeyCard();
+
+/* ═══ API KEY ACTIONS ═══ */
+$('apiKeyGear').addEventListener('click', function(e) {
+  e.stopPropagation();
+  const key = getStoredApiKey();
+  if (!key) { $('apiKeyInputRow').style.display = 'flex'; $('apiKeyInput').value = ''; $('apiKeyInput').focus(); return; }
+  const menu = document.createElement('div');
+  menu.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1300;background:rgba(28,32,44,.98);border:1px solid rgba(255,255,255,.16);border-radius:16px;padding:8px;min-width:200px;box-shadow:0 20px 60px rgba(0,0,0,.7)';
+  menu.innerHTML = '<button data-act="copy" style="width:100%;display:flex;gap:10px;padding:11px 12px;border-radius:12px;background:transparent;border:none;color:#fff;font:inherit;font-size:13.5px;font-weight:600;text-align:left;cursor:pointer">📋 Salin API Key</button>' +
+                   '<button data-act="change" style="width:100%;display:flex;gap:10px;padding:11px 12px;border-radius:12px;background:transparent;border:none;color:#fff;font:inherit;font-size:13.5px;font-weight:600;text-align:left;cursor:pointer">✏️ Ganti API Key</button>' +
+                   '<button data-act="delete" style="width:100%;display:flex;gap:10px;padding:11px 12px;border-radius:12px;background:transparent;border:none;color:#ff5f57;font:inherit;font-size:13.5px;font-weight:600;text-align:left;cursor:pointer">🗑️ Hapus API Key</button>';
+  const backdrop = document.createElement('div');
+  backdrop.style.cssText = 'position:fixed;inset:0;z-index:1299;background:rgba(0,0,0,.4)';
+  backdrop.addEventListener('click', () => { menu.remove(); backdrop.remove(); });
+  document.body.appendChild(backdrop);
+  document.body.appendChild(menu);
+  menu.querySelectorAll('button').forEach(b => {
+    b.addEventListener('mouseenter', () => b.style.background = 'rgba(255,255,255,.1)');
+    b.addEventListener('mouseleave', () => b.style.background = 'transparent');
+    b.addEventListener('click', async () => {
+      const act = b.dataset.act;
+      menu.remove(); backdrop.remove();
+      if (act === 'copy') { try { await navigator.clipboard.writeText(key); showIndicator('API Key disalin', 'ok'); } catch (_) { showIndicator('Gagal menyalin', 'err'); } }
+      else if (act === 'change') { $('apiKeyInputRow').style.display = 'flex'; $('apiKeyInput').value = key; $('apiKeyInput').focus(); }
+      else if (act === 'delete') { setStoredApiKey(''); renderApiKeyCard(); $('apiKeyInputRow').style.display = 'none'; showIndicator('API Key dihapus'); }
+    });
+  });
+});
+
+$('apiKeySave').addEventListener('click', function() {
+  const v = $('apiKeyInput').value.trim();
+  if (!v) { showIndicator('API Key kosong', 'err'); return; }
+  setStoredApiKey(v);
+  renderApiKeyCard();
+  $('apiKeyInputRow').style.display = 'none';
+  const p = detectProvider(v);
+  showIndicator('Tersimpan: ' + p.name, 'ok');
+});
+
+$('apiKeyInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') { e.preventDefault(); $('apiKeySave').click(); }
+  if (e.key === 'Escape') { $('apiKeyInputRow').style.display = 'none'; }
+});
+
+/* ═══ STATISTIK DATA ═══ */
+async function loadStats() {
+  if (!state.user) { $('statChats').textContent = '0'; $('statMessages').textContent = '0'; return; }
+  try {
+    const chatsRef = collection(db, 'users', state.user.uid, 'chats');
+    const chatsSnap = await getDocs(query(chatsRef));
+    let msgCount = 0;
+    const chats = [];
+    for (const chatDoc of chatsSnap.docs) {
+      const data = chatDoc.data() || {};
+      const created = data.createdAt ? (typeof data.createdAt.toMillis === 'function' ? data.createdAt.toMillis() : (data.createdAt instanceof Date ? data.createdAt.getTime() : (typeof data.createdAt === 'number' ? data.createdAt : Date.now()))) : Date.now();
+      chats.push({ id: chatDoc.id, title: data.title || 'Chat', createdAt: created });
+      const msgsRef = collection(db, 'users', state.user.uid, 'chats', chatDoc.id, 'messages');
+      const msgsSnap = await getDocs(query(msgsRef));
+      msgCount += msgsSnap.size;
+    }
+    state.chats = chats;
+    $('statChats').textContent = chatsSnap.size;
+    $('statMessages').textContent = msgCount;
+  } catch (e) { $('statChats').textContent = '0'; $('statMessages').textContent = '0'; }
+}
+
+/* ═══ STAT OVERLAY ═══ */
+const statOverlay = $('statOverlay');
+const statBackdrop = $('statBackdrop');
+const statTitle = $('statTitle');
+const statBody = $('statBody');
+
+function openStatOverlay(title, html) {
+  statTitle.textContent = title;
+  statBody.innerHTML = html;
+  statOverlay.classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+function closeStatOverlay() {
+  statOverlay.classList.remove('show');
+  document.body.style.overflow = '';
+}
+statBackdrop.addEventListener('click', closeStatOverlay);
+$('statClose').addEventListener('click', closeStatOverlay);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && statOverlay.classList.contains('show')) closeStatOverlay(); });
+
+function buildBarChart(data) {
+  const w = 100, h = 100, padTop = 14, padBottom = 18;
+  const maxV = Math.max(1, ...data.map(d => d.value));
+  const barW = (w - 4) / data.length - 2;
+  let svg = '<svg class="chart-svg" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none">';
+  svg += '<defs><linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0a84ff"/><stop offset="100%" stop-color="#0066d6"/></linearGradient></defs>';
+  data.forEach((d, i) => {
+    const barH = (d.value / maxV) * (h - padTop - padBottom);
+    const x = 2 + i * (barW + 2);
+    const y = h - padBottom - barH;
+    svg += '<rect class="bar" x="' + x + '" y="' + y + '" width="' + barW + '" height="' + Math.max(barH, 0.5) + '" rx="1"/>';
+    if (d.value > 0) svg += '<text class="bar-value" x="' + (x + barW / 2) + '" y="' + (y - 2) + '">' + d.value + '</text>';
+    svg += '<text class="bar-label" x="' + (x + barW / 2) + '" y="' + (h - 4) + '">' + d.label + '</text>';
+  });
+  svg += '</svg>';
+  return svg;
+}
+
+function getLast7Days() {
+  const out = [];
+  const now = new Date();
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+    out.push({ date: d, label: ['Min','Sen','Sel','Rab','Kam','Jum','Sab'][d.getDay()], ms: d.getTime() });
+  }
+  return out;
+}
+
+function escapeHtmlS(s) { return String(s || '').replace(/[<>&"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ⭐ Stat: CHATS */
+$('statChatsBox').addEventListener('click', async function() {
+  const days = getLast7Days();
+  const now = new Date();
+  const todayMs = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const weekAgo = todayMs - 6 * 86400000;
+  const monthAgo = todayMs - 29 * 86400000;
+  const totalChats = state.chats.length;
+  const thisWeek = state.chats.filter(c => c.createdAt >= weekAgo).length;
+  const thisMonth = state.chats.filter(c => c.createdAt >= monthAgo).length;
+
+  const perDay = days.map(d => {
+    const nextDay = d.ms + 86400000;
+    const count = state.chats.filter(c => c.createdAt >= d.ms && c.createdAt < nextDay).length;
+    return { label: d.label, value: count };
+  });
+
+  const recent = state.chats.slice(0, 5).map(c => '<div style="display:flex;justify-content:space-between;padding:8px 6px;border-bottom:1px solid rgba(255,255,255,.06);font-size:12.5px"><span style="color:var(--text-primary);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70%">' + escapeHtmlS(c.title) + '</span><span style="color:var(--text-tertiary);font-weight:700">' + new Date(c.createdAt).toLocaleDateString('id-ID', {day:'numeric',month:'short'}) + '</span></div>').join('') || '<div style="padding:12px;text-align:center;color:var(--text-tertiary);font-size:12px">Belum ada chat</div>';
+
+  const html = '' +
+    '<div class="stat-summary">' +
+      '<div class="stat-summary-box"><div class="stat-summary-value">' + totalChats + '</div><div class="stat-summary-label">Total Chat</div></div>' +
+      '<div class="stat-summary-box"><div class="stat-summary-value">' + thisWeek + '</div><div class="stat-summary-label">7 Hari</div></div>' +
+      '<div class="stat-summary-box"><div class="stat-summary-value">' + thisMonth + '</div><div class="stat-summary-label">30 Hari</div></div>' +
+    '</div>' +
+    '<div class="chart-wrap">' +
+      '<div class="chart-title">Aktivitas Chat 7 Hari Terakhir</div>' +
+      buildBarChart(perDay) +
+    '</div>' +
+    '<div class="chart-wrap">' +
+      '<div class="chart-title">Chat Terbaru</div>' +
+      recent +
+    '</div>';
+  openStatOverlay('Statistik Chat', html);
+});
+
+/* ⭐ Stat: PESAN */
+$('statMessagesBox').addEventListener('click', async function() {
+  const days = getLast7Days();
+  const totalMsgs = parseInt($('statMessages').textContent, 10) || 0;
+  const totalChats = state.chats.length;
+  const avg = totalChats ? Math.round(totalMsgs / totalChats) : 0;
+  const perDay = days.map(d => ({ label: d.label, value: 0 }));
+  const html = '' +
+    '<div class="stat-summary">' +
+      '<div class="stat-summary-box"><div class="stat-summary-value">' + totalMsgs + '</div><div class="stat-summary-label">Total Pesan</div></div>' +
+      '<div class="stat-summary-box"><div class="stat-summary-value">' + totalChats + '</div><div class="stat-summary-label">Total Chat</div></div>' +
+      '<div class="stat-summary-box"><div class="stat-summary-value">' + avg + '</div><div class="stat-summary-label">Rata-rata/Chat</div></div>' +
+    '</div>' +
+    '<div class="chart-wrap">' +
+      '<div class="chart-title">Pesan 7 Hari Terakhir</div>' +
+      buildBarChart(perDay) +
+    '</div>' +
+    '<div style="padding:12px;text-align:center;color:var(--text-tertiary);font-size:11.5px">Grafik detail per pesan akan hadir di versi berikutnya</div>';
+  openStatOverlay('Statistik Pesan', html);
+});
+
+/* ⭐ Stat: CREDITS */
+$('statCreditsBox').addEventListener('click', async function() {
+  const credits = state.credits;
+  const used = Math.max(0, 10 - credits);
+  const html = '' +
+    '<div class="stat-summary">' +
+      '<div class="stat-summary-box"><div class="stat-summary-value">' + credits + '</div><div class="stat-summary-label">Sisa Credits</div></div>' +
+      '<div class="stat-summary-box"><div class="stat-summary-value">' + used + '</div><div class="stat-summary-label">Terpakai</div></div>' +
+    '</div>' +
+    '<div class="chart-wrap">' +
+      '<div class="chart-title">Ringkasan Credits</div>' +
+      '<div class="credit-list">' +
+        '<div class="credit-row"><div><div class="credit-row-label">Saldo Saat Ini</div><div class="credit-row-sub">Tersedia untuk dipakai</div></div><div class="credit-row-value">' + credits + ' cr</div></div>' +
+        '<div class="credit-row"><div><div class="credit-row-label">Bonus Registrasi</div><div class="credit-row-sub">Diberikan saat daftar</div></div><div class="credit-row-value">+10 cr</div></div>' +
+        '<div class="credit-row"><div><div class="credit-row-label">Total Terpakai</div><div class="credit-row-sub">Sejak akun dibuat</div></div><div class="credit-row-value">- ' + used + ' cr</div></div>' +
+      '</div>' +
+    '</div>' +
+    '<button class="btn btn-support" style="margin-top:14px" id="statTopupBtn">☕ Top Up Credits</button>';
+  openStatOverlay('Statistik Credits', html);
+  setTimeout(() => {
+    const btn = document.getElementById('statTopupBtn');
+    if (btn) btn.addEventListener('click', () => { closeStatOverlay(); setTimeout(() => $('supportBtn').click(), 200); });
+  }, 20);
+});
+
+/* ═══ SETTINGS ═══ */
+const settingsOverlay = $('settingsOverlay');
+const settingsBackdrop = $('settingsBackdrop');
+function openSettings() { settingsOverlay.hidden = false; requestAnimationFrame(() => { requestAnimationFrame(() => settingsOverlay.classList.add('show')); }); }
+function closeSettings() { settingsOverlay.classList.remove('show'); setTimeout(() => { settingsOverlay.hidden = true; }, 260); }
+settingsBackdrop.addEventListener('click', closeSettings);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !settingsOverlay.hidden) closeSettings(); });
+
+(function attachGearSpin(){
+  const btn = $('gearBtn');
+  btn.addEventListener('click', function(e) {
+    e.preventDefault(); e.stopImmediatePropagation();
+    const svg = btn.querySelector('svg');
+    svg.classList.remove('spin-once');
+    void svg.offsetWidth;
+    svg.classList.add('spin-once');
+    setTimeout(() => {
+      svg.classList.remove('spin-once');
+      if (settingsOverlay.hidden) openSettings(); else closeSettings();
+    }, 500);
+  });
+})();
+
+$('setChangeName').addEventListener('click', () => {
+  closeSettings();
+  setTimeout(() => {
+    $('usernameInput').value = state.username || '';
+    $('usernameDisplay').style.display = 'none';
+    $('usernameEdit').classList.add('active');
+    $('usernameInput').focus();
+    $('usernameInput').select();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, 280);
+});
+
+$('setLogout').addEventListener('click', async () => {
+  closeSettings();
+  setTimeout(async () => {
+    try { sessionStorage.removeItem('bs_chat_rendered'); sessionStorage.removeItem('bs_user_cache'); } catch (_) {}
+    await signOut(auth);
+    window.location.replace('login.html');
+  }, 280);
+});
+
+/* ═══ AVATAR ═══ */
+const avatarWrap = $('avatarWrap');
+$('avatarEditBadge').addEventListener('click', function() {
+  avatarWrap.classList.remove('flashing'); void avatarWrap.offsetWidth; avatarWrap.classList.add('flashing');
+  setTimeout(() => avatarWrap.classList.remove('flashing'), 600);
+  setTimeout(() => $('photoInput').click(), 180);
+});
+
+function compressImage(file, maxSize = 400, quality = 0.82) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = e => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > height) { if (width > maxSize) { height = Math.round(height * maxSize / width); width = maxSize; } }
+        else { if (height > maxSize) { width = Math.round(width * maxSize / height); height = maxSize; } }
+        const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+$('photoInput').addEventListener('change', async function(e) {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { showIndicator('File harus gambar', 'err'); return; }
+  if (file.size > 8 * 1024 * 1024) { showIndicator('Foto terlalu besar (max 8MB)', 'err'); return; }
+  try {
+    const base64 = await compressImage(file, 400, 0.82);
+    currentPhoto = base64;
+    setAvatar(base64, state.username && state.username[0]);
+    await updateDoc(doc(db, 'users', state.user.uid), { photoBase64: base64 });
+    try { await updateProfile(state.user, { photoURL: base64 }); } catch (_) {}
+    state.photoBase64 = base64;
+    try { sessionStorage.setItem('bs_user_cache', JSON.stringify({ uid: state.user.uid, email: state.user.email, username: state.username, photoBase64: base64 })); } catch (_) {}
+    syncLastAccount(base64, state.username);
+    showIndicator('Foto profil diperbarui', 'ok');
+  } catch (err) { showIndicator('Gagal upload foto', 'err'); }
+  e.target.value = '';
+});
+
+function cancelEdit() { $('usernameEdit').classList.remove('active'); $('usernameDisplay').style.display = 'inline-flex'; }
+$('usernameCancel').addEventListener('click', cancelEdit);
+async function saveUsername() {
+  const val = $('usernameInput').value.trim();
+  if (!val) { showIndicator('Nama tidak boleh kosong', 'err'); return; }
+  if (!/^[a-zA-Z0-9\s]{3,20}$/.test(val)) { showIndicator('Nama 3–20 karakter (tanpa simbol)', 'err'); return; }
+  if (val === state.username) { cancelEdit(); return; }
+  try {
+    await updateDoc(doc(db, 'users', state.user.uid), { username: val });
+    try { await updateProfile(state.user, { displayName: val }); } catch (_) {}
+    state.username = val; currentName = val;
+    $('usernameText').textContent = val;
+    setAvatar(state.photoBase64, val[0]);
+    cancelEdit();
+    try { sessionStorage.setItem('bs_user_cache', JSON.stringify({ uid: state.user.uid, email: state.user.email, username: val, photoBase64: state.photoBase64 })); } catch (_) {}
+    syncLastAccount(undefined, val);
+    showIndicator('Nama diperbarui', 'ok');
+  } catch (e) { showIndicator('Gagal menyimpan nama', 'err'); }
+}
+$('usernameSave').addEventListener('click', saveUsername);
+$('usernameInput').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); saveUsername(); } if (e.key === 'Escape') cancelEdit(); });
+
+$('supportBtn').addEventListener('click', () => { showIndicator('Support Me — coming soon ☕'); });
+
+$('logoutBtn').addEventListener('click', async () => {
+  try { sessionStorage.removeItem('bs_chat_rendered'); sessionStorage.removeItem('bs_user_cache'); } catch (_) {}
+  await signOut(auth);
+  window.location.replace('login.html');
+});
+
+/* ═══ KELOLA MODEL AI ═══ */
+function renderAiModelsList() {
+  const list = $('aiModelsList');
+  if (!list) return;
+  const models = getModels();
+  const active = getActiveModel();
+  list.innerHTML = '';
+  if (!models.length) {
+    list.innerHTML = '<div class="row-sub" style="padding:6px 2px">Belum ada model tersimpan.</div>';
+    return;
+  }
+  models.forEach(m => {
+    const row = document.createElement('div');
+    row.className = 'api-key-card';
+    row.style.cursor = 'pointer';
+    const isActive = m.id === active.id;
+    row.innerHTML =
+      '<div class="api-key-icon">' + escapeHtmlS(m.iconEmoji || '🤖') + '</div>' +
+      '<div class="api-key-body">' +
+        '<div class="api-key-name">' + escapeHtmlS(m.name || 'Model') + (isActive ? ' <span style="color:var(--accent);font-weight:800">• Aktif</span>' : '') + '</div>' +
+        '<div class="api-key-detail">' + escapeHtmlS(m.endpoint || '-') + '</div>' +
+      '</div>' +
+      (models.length > 1 ? '<button type="button" class="api-key-gear" data-del="' + m.id + '" aria-label="Hapus model" style="background:rgba(255,59,48,.14);border-color:rgba(255,59,48,.3);color:#ff5f57">🗑️</button>' : '');
+    row.addEventListener('click', async (e) => {
+      if (e.target.closest('[data-del]')) return;
+      if (m.id === getActiveModel().id) return;
+      await setActiveModel(m.id);
+      renderAiModelsList();
+      showIndicator('Model aktif: ' + (m.name || 'Model'), 'ok');
+    });
+    const delBtn = row.querySelector('[data-del]');
+    if (delBtn) delBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const remaining = getModels().filter(x => x.id !== m.id);
+      const wasActive = m.id === getActiveModel().id;
+      await saveModelsToStorage(remaining);
+      if (wasActive && remaining.length) await setActiveModel(remaining[0].id);
+      await refreshModels();
+      renderAiModelsList();
+      showIndicator('Model dihapus');
+    });
+    list.appendChild(row);
+  });
+}
+
+$('addModelToggle').addEventListener('click', () => {
+  const row = $('addModelFormRow');
+  const willShow = row.style.display !== 'flex';
+  row.style.display = willShow ? 'flex' : 'none';
+  if (willShow) { $('newModelApiKey').value = ''; $('newModelEndpoint').value = ''; $('newModelName').value = ''; $('newModelApiKey').focus(); }
+});
+
+$('newModelSave').addEventListener('click', async () => {
+  const name = $('newModelName').value.trim() || 'Model Baru';
+  const apiKey = $('newModelApiKey').value.trim();
+  const endpoint = $('newModelEndpoint').value.trim();
+  if (!endpoint) { showIndicator('Endpoint wajib diisi', 'err'); $('newModelEndpoint').focus(); return; }
+  const newModel = {
+    id: 'm_' + Date.now(), name, description: endpoint, isActive: true,
+    iconEmoji: '🤖', provider: 'spicychat', endpoint, apiKey, characterId: '', modelName: 'default'
+  };
+  const models = getModels().concat([newModel]);
+  await saveModelsToStorage(models);
+  await setActiveModel(newModel.id);
+  await refreshModels();
+  renderAiModelsList();
+  $('addModelFormRow').style.display = 'none';
+  showIndicator('Model tersimpan: ' + name, 'ok');
+});
+
+$('newModelEndpoint').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('newModelSave').click(); } });
+
+initModelPicker({}).then(renderAiModelsList);
+
+/* ═══ AUTH ═══ */
+onAuthStateChanged(auth, async (user) => {
+  if (!user) return;
+  state.user = user;
+  const email = user.email || '';
+  $('userEmail').textContent = email;
+  $('rowEmail').textContent = email;
+  $('rowUid').textContent = user.uid.substring(0, 16) + '…';
+
+  const cache = window.__bsCache;
+  const hasValidCache = cache && cache.uid === user.uid;
+  if (!hasValidCache) {
+    const dn = user.displayName || email.split('@')[0] || 'User';
+    renderNameSafe(dn);
+    renderAvatarSafe(user.photoURL || null, dn[0]);
+    state.username = dn; state.photoBase64 = user.photoURL || null;
+  } else {
+    state.username = cache.username; state.photoBase64 = cache.photoBase64 || null;
+  }
+
+  try {
+    const snap = await getDoc(doc(db, 'users', user.uid));
+    if (snap.exists()) {
+      const data = snap.data();
+      const dn = data.username || user.displayName || email.split('@')[0] || 'User';
+      const pb = data.photoBase64 || null;
+      renderNameSafe(dn); renderAvatarSafe(pb, dn[0]);
+      state.username = dn; state.photoBase64 = pb;
+      if (typeof data.credits === 'number') state.credits = data.credits;
+      try { sessionStorage.setItem('bs_user_cache', JSON.stringify({ uid: user.uid, email, username: dn, photoBase64: pb })); } catch (_) {}
+      syncLastAccount(pb, dn);
+    } else {
+      await setDoc(doc(db, 'users', user.uid), { username: state.username || email.split('@')[0] || 'User', email, createdAt: new Date().toISOString(), credits: 10 });
+    }
+  } catch (e) {}
+
+  $('statCredits').textContent = state.credits;
+  loadStats();
+});
+</script>
+
+</body>
+</html>
